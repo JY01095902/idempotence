@@ -61,12 +61,12 @@ func NewRedisIdempotenceStorage(config RedisIdempotenceStorageConfig) (RedisIdem
 	}, nil
 }
 
-func (storage RedisIdempotenceStorage) SaveIfAbsent(group IdempotenceGroup, key string) error {
+func (storage RedisIdempotenceStorage) SaveIfAbsent(key, group string) error {
 	if storage.client == nil {
 		return errors.New("invalid redis client")
 	}
 
-	groupName := strings.ToLower(group.String()) + "_request_keys"
+	groupName := strings.ToLower(strings.TrimSpace(group)) + "_request_keys"
 	cmd := storage.client.HSetNX(context.Background(), groupName, key, GetTimestamp())
 	if cmd.Val() {
 		return nil
@@ -75,12 +75,12 @@ func (storage RedisIdempotenceStorage) SaveIfAbsent(group IdempotenceGroup, key 
 	return errors.New("idempotence key already exists")
 }
 
-func (storage RedisIdempotenceStorage) Remove(group IdempotenceGroup, key string) error {
+func (storage RedisIdempotenceStorage) Remove(key, group string) error {
 	if storage.client == nil {
 		return errors.New("invalid redis client")
 	}
 
-	groupName := strings.ToLower(group.String()) + "_request_keys"
+	groupName := strings.ToLower(strings.TrimSpace(group)) + "_request_keys"
 	cmd := storage.client.HDel(context.Background(), groupName, key)
 
 	return cmd.Err()
